@@ -11,7 +11,7 @@ from pytubefix.exceptions import VideoUnavailable, AgeRestrictedError, BotDetect
 USB_PATH = '/media/aerial/MUSIC'
 PLAYLISTS_URLS : list[str] = [
     'https://www.youtube.com/playlist?list=PLKhMBl2bi_P8E7ajBeqDttWEvhMW4beFv',  # The Best of Youtube
-    #'https://www.youtube.com/playlist?list=PLKhMBl2bi_P-DFD5aufaItfrnpXCgqDBS',  # Anything Goes
+    'https://www.youtube.com/playlist?list=PLKhMBl2bi_P-DFD5aufaItfrnpXCgqDBS',  # Anything Goes
 ]
 
 
@@ -66,7 +66,6 @@ def download_playlist(urls_dict : dict, logs_dict: dict):
                 ys = yt.streams.filter(only_audio=True, file_extension='mp4').first()
 
                 title = re.sub(r'[\W_]+', '_', yt.title).strip('_')
-
                 m4a_title = f'{title}.m4a'
                 mp3_title = f'{title}.mp3'
                 ys.download(output_path=OUTPUT_PATH, filename=m4a_title)
@@ -103,16 +102,19 @@ def sync_playlist(urls_dict : dict, logs_dict : dict) -> int:
         print("\nUSB is already synced.")
         return 0
 
-    counter : int = 0
-    print(f"\nSyncing: {len(to_remove)} files will be removed.")
+    counter : int = 1  # so it displays 1/xx ... xx/xx instead of one less
+    print(f"\nSyncing: {len(to_remove)} files will be removed.\n")
     for url_key in to_remove:
-        title = urls_dict[url_key][0]
-        mp3_path = os.path.join(OUTPUT_PATH, f'{title}.mp3')
+        title = urls_dict[url_key][0].rstrip()
+        print(title)
+        mp3_title = f'{title}.mp3'
+        mp3_path = f'{OUTPUT_PATH}/{mp3_title}'
 
         if os.path.exists(mp3_path):
             try:
                 print(f'({counter}/{len(to_remove)}) Deleting: {title}')
                 os.remove(mp3_path)
+                add_to_log('deletion', title, logs_dict)
             except Exception as e:
                 print(f"Error while deleting {mp3_path}: {e}")
 
@@ -121,8 +123,8 @@ def sync_playlist(urls_dict : dict, logs_dict : dict) -> int:
 
     with open(urls_txt, "w", encoding='utf-8') as urltxt:
         for url, data in urls_dict.items():
-            urltxt.write(f'{url},{data[0]}\n')  # updates file
-    return counter
+            urltxt.write(f'{url},{data[0]}')  # updates file
+    return counter - 1
 
 
 if __name__ == '__main__':
@@ -154,7 +156,7 @@ if __name__ == '__main__':
                         url, title = line.split(sep=',', maxsplit=1)
                         urls_dict[url] = [title, 0]  # converts the lines to a 'url : (title, counter)' dictionary
             
-            logs_txt = Path(f'{OUTPUT_PATH}/errors.txt')
+            logs_txt = Path(f'{OUTPUT_PATH}/logs.txt')
             logs_dict : dict = {}
             open(logs_txt, 'w', encoding='utf-8').close()
             print(f"File '{logs_txt}' created successfully.\n")
