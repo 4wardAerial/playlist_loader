@@ -7,16 +7,16 @@ from pathlib import Path
 from pytubefix import Playlist, YouTube
 from pytubefix.exceptions import VideoUnavailable, AgeRestrictedError, BotDetection
 
-class FFMPEGError(Exception):
-    def __init__(self):
-        super().__init__()
-
-
 USB_PATH = '/media/aerial/MUSIC'
 PLAYLISTS_URLS : list[str] = [
     'https://www.youtube.com/playlist?list=PLKhMBl2bi_P8E7ajBeqDttWEvhMW4beFv',  # The Best of Youtube
-    'https://www.youtube.com/playlist?list=PLKhMBl2bi_P-DFD5aufaItfrnpXCgqDBS',  # Anything Goes
+    #'https://www.youtube.com/playlist?list=PLKhMBl2bi_P-DFD5aufaItfrnpXCgqDBS',  # Anything Goes
 ]
+
+
+class FFMPEGError(Exception):
+    def __init__(self):
+        super().__init__()
 
 
 def create_dir():
@@ -31,14 +31,30 @@ def create_dir():
         raise FileNotFoundError
 
 
-def add_to_error(exception : str, error : str, errors_dict : dict):
-    if error not in errors_dict:
-        with open(errors_txt, 'a', encoding="utf-8") as errortxt:
-            errortxt.write(f'{error},{exception}\n')  # updates file
+def m4a_to_mp3(m4a_path : str, mp3_path : str):
+    # Adjusted command to ensure compatibility
+    command = f'ffmpeg -nostats -i "{m4a_path}" -fflags +genpts -vn -ar 44100 -ac 2 -ab 192k -f mp3 -hide_banner -loglevel quiet "{mp3_path}"'
+    result = os.system(command)
+
+    if os.path.exists(m4a_path):  # deletes the m4a file regardless
+        try:
+            os.remove(m4a_path)
+        except Exception as e:
+            print(f"Error while deleting {m4a_path}: {e}")
+
+    if result != 0:
+        raise FFMPEGError()
+    
+
+def add_to_log(reason : str, log : str, logs_dict : dict):
+    if log not in logs_dict:
+        with open(logs_txt, 'a', encoding="utf-8") as logtxt:
+            logtxt.write(f'{log},{reason}\n')  # updates file
 
 
-def download_playlist(urls_dict : dict, errors_dict : dict):
+def download_playlist(urls_dict : dict, logs_dict: dict):
     counter : int = 0
+
     for url in p.video_urls:
         try:
             yt = YouTube(url)
@@ -54,42 +70,60 @@ def download_playlist(urls_dict : dict, errors_dict : dict):
                 m4a_to_mp3(f'{OUTPUT_PATH}/{m4a_title}', f'{OUTPUT_PATH}/{mp3_title}')
 
                 with open(urls_txt, 'a', encoding="utf-8") as urltxt:
-                    urltxt.write(f'{url},{yt.title}\n')  # updates file
+                    urltxt.write(f'{url},{title}\n')  # updates file
+            else:
+                urls_dict[url][1] = 1  # updates counter to show the song is still on the playlist 
                 
-        except (BotDetection, KeyError):
-            print(f'Video "{url}" flags as bot, skipping.')
-            add_to_error('bot_detection', url, errors_dict)
         except FFMPEGError:
             print(f'Video "{url}" caused an ffmpeg error, skipping.')
-            add_to_error('ffmpeg', url, errors_dict)
+            add_to_log('ffmpeg', title, logs_dict)
+        except (BotDetection, KeyError):
+            print(f'Video "{url}" flags as bot, skipping.')
+            add_to_log('bot_detection', url, logs_dict)
         except AgeRestrictedError:
             print(f'Video "{url}" is age restricted, skipping.')
-            add_to_error('age_restriction', url, errors_dict)
+            add_to_log('age_restriction', url, logs_dict)
         except VideoUnavailable:
             print(f'Video "{url}" is unavailable, skipping.')
-            add_to_error('unavailable', url, errors_dict)
+            add_to_log('unavailable', url, logs_dict)
         except Exception as e:
             print(f'Video "{url}" caused unkown exception "{e}", skipping.')
-            add_to_error('unknown', url, errors_dict)
+            add_to_log('unknown', url, logs_dict)
 
         counter += 1
 
 
-def m4a_to_mp3(m4a_path : str, mp3_path : str):
-    # Adjusted command to ensure compatibility
-    
-    command = f'ffmpeg -nostats -i "{m4a_path}" -fflags +genpts -vn -ar 44100 -ac 2 -ab 192k -f mp3 -hide_banner -loglevel quiet "{mp3_path}"'
-    result = os.system(command)
+def sync_playlist(urls_dict : dict, logs_dict : dict):
+    # Creates list of videos that were deleted on youtube, but not in the USB
+    to_remove = [url for url, data in urls_dict.items() if data[1] == 0]
+    if not to_remove:
+        print("\nUSB is already synced.")
+        return
 
-    if os.path.exists(m4a_path):  # deletes the m4a file regardless
-        os.remove(m4a_path)
+    counter : int = 0
+    print(f"\nSyncing: {len(to_remove)} files will be removed.")
+    for url_key in to_remove:
+        title = urls_dict[url_key][0]
+        mp3_path = os.path.join(OUTPUT_PATH, f'{title}.mp3')
 
-    if result != 0:
-        raise FFMPEGError()
-    
+        if os.path.exists(mp3_path):
+            try:
+                print(f'({counter}/{len(to_remove)}) Deleting: {title}')
+                os.remove(mp3_path)
+            except Exception as e:
+                print(f"Error while deleting {mp3_path}: {e}")
+
+        del urls_dict[url_key]  # removes from the dict
+
+    with open(urls_txt, "w", encoding='utf-8') as urltxt:
+        for url, data in urls_dict.items():
+            urltxt.write(f'{url},{data[0]}\n')  # udpates file
+
 
 if __name__ == '__main__':
     print('\nYouTube playlist downloader -------------------------made by 4wardAerial')
+    print('\n[0] Just download   [1] Download and sync')
+    mode : int = int(input('> '))
 
     try:
         for PLAYLIST_URL in PLAYLISTS_URLS:
@@ -113,14 +147,17 @@ if __name__ == '__main__':
                     lines = urltxt.readlines()
                     for line in lines:
                         url, title = line.split(sep=',', maxsplit=1)
-                        urls_dict[url] = title  # converts the lines to a 'url : title' dictionary
+                        urls_dict[url] = (title, 0)  # converts the lines to a 'url : (title, counter)' dictionary
             
-            errors_txt = Path(f'{OUTPUT_PATH}/errors.txt')
-            errors_dict : dict = {}
-            open(errors_txt, 'w', encoding='utf-8').close()
-            print(f"File '{errors_txt}' created successfully.\n")
+            logs_txt = Path(f'{OUTPUT_PATH}/errors.txt')
+            logs_dict : dict = {}
+            open(logs_txt, 'w', encoding='utf-8').close()
+            print(f"File '{logs_txt}' created successfully.\n")
             
-            download_playlist(urls_dict, errors_dict)
+            download_playlist(urls_dict, logs_dict)
+            if mode == 1:
+                sync_playlist(urls_dict, logs_dict)
+
             print("------------------------------------------------------------------------")
             sleep(1)
             print(f'\nPlaylist {p.title} fully updated!')
