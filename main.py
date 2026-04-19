@@ -14,7 +14,7 @@ class FFMPEGError(Exception):
 
 USB_PATH = '/media/aerial/MUSIC'
 PLAYLISTS_URLS : list[str] = [
-    #'https://www.youtube.com/playlist?list=PLKhMBl2bi_P8E7ajBeqDttWEvhMW4beFv',  # The Best of Youtube
+    'https://www.youtube.com/playlist?list=PLKhMBl2bi_P8E7ajBeqDttWEvhMW4beFv',  # The Best of Youtube
     'https://www.youtube.com/playlist?list=PLKhMBl2bi_P-DFD5aufaItfrnpXCgqDBS',  # Anything Goes
 ]
 
