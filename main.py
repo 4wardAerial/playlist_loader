@@ -8,12 +8,8 @@ from pytubefix import Playlist, YouTube
 from pytubefix.exceptions import VideoUnavailable, AgeRestrictedError, BotDetection
 
 class FFMPEGError(Exception):
-    def __init__(self, message, error_code):
-        super().__init__(message)
-        self.error_code = error_code
-
-    def __str__(self):
-        return f"{self.message} (Error Code: {self.error_code})"
+    def __init__(self):
+        super().__init__()
 
 
 USB_PATH = '/media/aerial/MUSIC'
@@ -35,6 +31,12 @@ def create_dir():
         raise FileNotFoundError
 
 
+def add_to_error(exception : str, error : str, errors_dict : dict):
+    if error not in errors_dict:
+        with open(errors_txt, 'a', encoding="utf-8") as errortxt:
+            errortxt.write(f'{error},{exception}\n')  # updates file
+
+
 def download_playlist(urls_dict : dict, errors_dict : dict):
     counter : int = 0
     for url in p.video_urls:
@@ -42,9 +44,9 @@ def download_playlist(urls_dict : dict, errors_dict : dict):
             yt = YouTube(url)
 
             if url not in urls_dict:  # ignores videos that are already on the playlist
-
                 print(f'({counter}/{p.length}) Downloading audio from: {yt.title}')
-                ys = yt.streams.get_audio_only()
+                
+                ys = yt.streams.filter(only_audio=True, file_extension='mp4').first()
                 title = re.sub(r'[^\w\-_\. /]', '_', yt.title)  # replaces invalid chars from titles
                 m4a_title = f'{title}.m4a'
                 mp3_title = f'{title}.mp3'
@@ -53,29 +55,38 @@ def download_playlist(urls_dict : dict, errors_dict : dict):
 
                 with open(urls_txt, 'a', encoding="utf-8") as urltxt:
                     urltxt.write(f'{url},{yt.title}\n')  # updates file
+                
+        except (BotDetection, KeyError):
+            print(f'Video "{url}" flags as bot, skipping.')
+            add_to_error('bot_detection', url, errors_dict)
         except FFMPEGError:
-            print(f'Video "{title}" caused an ffmpeg error, skipping.')
+            print(f'Video "{url}" caused an ffmpeg error, skipping.')
+            add_to_error('ffmpeg', url, errors_dict)
         except AgeRestrictedError:
-            print(f'Video "{title}" is age restricted, skipping.')
-        except BotDetection:
-            print(f'Video "{title}" flags as bot, skipping.')
+            print(f'Video "{url}" is age restricted, skipping.')
+            add_to_error('age_restriction', url, errors_dict)
         except VideoUnavailable:
-            print(f'Video "{title}" is unavailable, skipping.')
-            
+            print(f'Video "{url}" is unavailable, skipping.')
+            add_to_error('unavailable', url, errors_dict)
+        except Exception as e:
+            print(f'Video "{url}" caused unkown exception "{e}", skipping.')
+            add_to_error('unknown', url, errors_dict)
+
         counter += 1
 
 
-def m4a_to_mp3(m4a_path, mp3_path):
+def m4a_to_mp3(m4a_path : str, mp3_path : str):
     # Adjusted command to ensure compatibility
-    command = f'ffmpeg -nostats -i "{m4a_path}" -vn -ar 44100 -ac 2 -ab 192k -f mp3 -hide_banner -loglevel quiet "{mp3_path}"'
+    
+    command = f'ffmpeg -nostats -i "{m4a_path}" -fflags +genpts -vn -ar 44100 -ac 2 -ab 192k -f mp3 -hide_banner -loglevel quiet "{mp3_path}"'
     result = os.system(command)
 
-    if os.path.exists(m4a_path):    # deletes the m4a file regardless
+    if os.path.exists(m4a_path):  # deletes the m4a file regardless
         os.remove(m4a_path)
 
-    if result != 0: # 
+    if result != 0:
         raise FFMPEGError()
-
+    
 
 if __name__ == '__main__':
     print('\nYouTube playlist downloader -------------------------made by 4wardAerial')
@@ -94,10 +105,10 @@ if __name__ == '__main__':
             urls_dict : dict = {}
 
             if not os.path.exists(urls_txt):
-                print(f"File '{urls_txt}' created successfully.\n")
+                print(f"File '{urls_txt}' created successfully.")
                 open(urls_txt, 'w').close()
             else:
-                print(f"File '{urls_txt}' already exists.\n")
+                print(f"File '{urls_txt}' already exists.")
                 with open(urls_txt, 'r+', encoding='utf-8') as urltxt:
                     lines = urltxt.readlines()
                     for line in lines:
@@ -106,18 +117,9 @@ if __name__ == '__main__':
             
             errors_txt = Path(f'{OUTPUT_PATH}/errors.txt')
             errors_dict : dict = {}
-
-            if not os.path.exists(errors_txt):
-                print(f"File '{errors_txt}' created successfully.\n")
-                open(errors_txt, 'w').close()
-            else:
-                print(f"File '{errors_txt}' already exists.\n")
-                with open(errors_txt, 'r+', encoding='utf-8') as errortxt:
-                    lines = errortxt.readlines()
-                    for line in lines:
-                        error, title = line.split(sep=',', maxsplit=1)
-                        errors_dict[error] = title
-        
+            open(errors_txt, 'w', encoding='utf-8').close()
+            print(f"File '{errors_txt}' created successfully.\n")
+            
             download_playlist(urls_dict, errors_dict)
             print("------------------------------------------------------------------------")
             sleep(1)
