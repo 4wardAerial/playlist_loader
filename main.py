@@ -1,5 +1,6 @@
 import os
 import re
+import subprocess
 
 from time import sleep
 from pathlib import Path
@@ -29,7 +30,7 @@ def create_dir():
         print(f"Permission denied: Unable to create '{OUTPUT_PATH}'")
     except FileNotFoundError:
         raise FileNotFoundError
-
+    
 
 def m4a_to_mp3(m4a_path : str, mp3_path : str):
     # Adjusted command to ensure compatibility
@@ -63,7 +64,9 @@ def download_playlist(urls_dict : dict, logs_dict: dict):
                 print(f'({counter}/{p.length}) Downloading audio from: {yt.title}')
                 
                 ys = yt.streams.filter(only_audio=True, file_extension='mp4').first()
-                title = re.sub(r'[^\w\-_\. /]', '_', yt.title)  # replaces invalid chars from titles
+
+                title = re.sub(r'[\W_]+', '_', yt.title).strip('_')
+
                 m4a_title = f'{title}.m4a'
                 mp3_title = f'{title}.mp3'
                 ys.download(output_path=OUTPUT_PATH, filename=m4a_title)
@@ -93,12 +96,12 @@ def download_playlist(urls_dict : dict, logs_dict: dict):
         counter += 1
 
 
-def sync_playlist(urls_dict : dict, logs_dict : dict):
+def sync_playlist(urls_dict : dict, logs_dict : dict) -> int:
     # Creates list of videos that were deleted on youtube, but not in the USB
     to_remove = [url for url, data in urls_dict.items() if data[1] == 0]
     if not to_remove:
         print("\nUSB is already synced.")
-        return
+        return 0
 
     counter : int = 0
     print(f"\nSyncing: {len(to_remove)} files will be removed.")
@@ -114,10 +117,12 @@ def sync_playlist(urls_dict : dict, logs_dict : dict):
                 print(f"Error while deleting {mp3_path}: {e}")
 
         del urls_dict[url_key]  # removes from the dict
+        counter += 1
 
     with open(urls_txt, "w", encoding='utf-8') as urltxt:
         for url, data in urls_dict.items():
-            urltxt.write(f'{url},{data[0]}\n')  # udpates file
+            urltxt.write(f'{url},{data[0]}\n')  # updates file
+    return counter
 
 
 if __name__ == '__main__':
@@ -147,7 +152,7 @@ if __name__ == '__main__':
                     lines = urltxt.readlines()
                     for line in lines:
                         url, title = line.split(sep=',', maxsplit=1)
-                        urls_dict[url] = (title, 0)  # converts the lines to a 'url : (title, counter)' dictionary
+                        urls_dict[url] = [title, 0]  # converts the lines to a 'url : (title, counter)' dictionary
             
             logs_txt = Path(f'{OUTPUT_PATH}/errors.txt')
             logs_dict : dict = {}
@@ -155,8 +160,13 @@ if __name__ == '__main__':
             print(f"File '{logs_txt}' created successfully.\n")
             
             download_playlist(urls_dict, logs_dict)
+            with open(logs_txt, 'r', encoding='utf-8') as logtxt:
+                lines = logtxt.readlines()
+            print(f'\nDownloaded Playlist {p.title} with {len(lines)}/{p.length} skips')
+
             if mode == 1:
-                sync_playlist(urls_dict, logs_dict)
+                deleted : int = sync_playlist(urls_dict, logs_dict)
+                print(f'\nSynced Playlist {p.title} with {deleted} deletions')
 
             print("------------------------------------------------------------------------")
             sleep(1)
