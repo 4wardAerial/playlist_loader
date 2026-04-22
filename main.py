@@ -1,6 +1,5 @@
 import os
 import re
-import subprocess
 
 from time import sleep
 from pathlib import Path
@@ -8,7 +7,7 @@ from pathlib import Path
 from pytubefix import Playlist, YouTube
 from pytubefix.exceptions import VideoUnavailable, AgeRestrictedError, BotDetection
 
-USB_PATH = '/media/aerial/MUSIC'
+USB_PATH = '/media/aerial/MUSIC'  # Path to USB
 PLAYLISTS_URLS : list[str] = [
     'https://www.youtube.com/playlist?list=PLKhMBl2bi_P8E7ajBeqDttWEvhMW4beFv',  # The Best of Youtube
     'https://www.youtube.com/playlist?list=PLKhMBl2bi_P-DFD5aufaItfrnpXCgqDBS',  # Anything Goes
@@ -165,13 +164,15 @@ if __name__ == '__main__':
             with open(logs_txt, 'r', encoding='utf-8') as logtxt:
                 lines = logtxt.readlines()
             print(f'\nDownloaded Playlist {p.title} with {len(lines)}/{p.length} skips')
+            print("------------------------------------------------------------------------")
+            sleep(1)
 
             if mode == 1:
                 deleted : int = sync_playlist(urls_dict, logs_dict)
                 print(f'\nSynced Playlist {p.title} with {deleted} deletions')
+                print("------------------------------------------------------------------------")
+                sleep(1)
 
-            print("------------------------------------------------------------------------")
-            sleep(1)
             print(f'\nPlaylist {p.title} fully updated!')
             sleep(1)
             
