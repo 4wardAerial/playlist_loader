@@ -7,7 +7,7 @@ from pathlib import Path
 from pytubefix import Playlist, YouTube
 from pytubefix.exceptions import VideoUnavailable, AgeRestrictedError, BotDetection
 
-USB_PATH = '/media/aerial/MUSIC'  # Path to USB
+USB_PATH = '/media/lucas-henrique/MUSIC'  # Path to USB
 PLAYLISTS_URLS : list[str] = [
     'https://www.youtube.com/playlist?list=PLKhMBl2bi_P8E7ajBeqDttWEvhMW4beFv',  # The Best of Youtube
     'https://www.youtube.com/playlist?list=PLKhMBl2bi_P-DFD5aufaItfrnpXCgqDBS',  # Anything Goes
@@ -74,7 +74,7 @@ def download_playlist(urls_dict : dict, logs_dict: dict):
                     urltxt.write(f'{url},{title}\n')  # updates file
             else:
                 urls_dict[url][1] = 1  # updates counter to show the song is still on the playlist 
-                
+            
         except FFMPEGError:
             print(f'Video "{url}" caused an ffmpeg error, skipping.')
             add_to_log('ffmpeg', title, logs_dict)
@@ -137,7 +137,8 @@ if __name__ == '__main__':
             dir = p.title
             OUTPUT_PATH : str = f'{USB_PATH}/{dir}'
 
-            print(f'\nDownloading playlist: {p.title}\n')
+            print("\n------------------------------------------------------------------------")
+            print(f'Downloading playlist: {p.title}\n')
 
             create_dir()
 
@@ -163,7 +164,7 @@ if __name__ == '__main__':
             download_playlist(urls_dict, logs_dict)
             with open(logs_txt, 'r', encoding='utf-8') as logtxt:
                 lines = logtxt.readlines()
-            print(f'\nDownloaded Playlist {p.title} with {len(lines)}/{p.length} skips')
+            print(f'\nDownloaded Playlist {p.title} with {len(lines)}/{p.length} skips.')
             print("------------------------------------------------------------------------")
             sleep(1)
 
@@ -173,7 +174,8 @@ if __name__ == '__main__':
                 print("------------------------------------------------------------------------")
                 sleep(1)
 
-            print(f'\nPlaylist {p.title} fully updated!')
+            print(f'Playlist {p.title} fully updated!')
+            print("------------------------------------------------------------------------")
             sleep(1)
             
         print('\nAll playlists updated successfully.\n')
