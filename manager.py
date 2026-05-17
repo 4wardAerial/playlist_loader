@@ -79,13 +79,12 @@ def sync_playlist(urls_dict : dict, logs_dict : dict, urls_txt : Path, logs_txt 
         print("\nUSB is already synced.")
         return 0
 
-    counter : int = 1  # so it displays 1/xx ... xx/xx instead of one less
     print(f"\nSyncing: {len(to_remove)} files will be removed. Proceed? [Y/n]\n")
     confirmation = input("> ")
 
     if confirmation != 'Y':
         return 0
-    for url_key in to_remove:
+    for counter, url_key in enumerate(to_remove, start=1):
         title = urls_dict[url_key][0].rstrip()
         print(title)
         mp3_title = f'{title}.mp3'
@@ -100,7 +99,6 @@ def sync_playlist(urls_dict : dict, logs_dict : dict, urls_txt : Path, logs_txt 
                 print(f"Error while deleting {mp3_path}: {e}")
 
         del urls_dict[url_key]  # removes from the dict
-        counter += 1
 
     with open(urls_txt, "w", encoding='utf-8') as urltxt:
         for url, data in urls_dict.items():
