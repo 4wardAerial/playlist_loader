@@ -32,13 +32,18 @@ def m4a_to_mp3(m4a_path : str, mp3_path : str):
     
 
 def download_playlist(p : Playlist, urls_dict : dict, logs_dict : dict, urls_txt : Path, logs_txt : Path, LOCAL_OUTPUT_PATH : Path, DEVICE_OUTPUT_PATH : Path, IS_MOBILE : bool):
+    first : bool = True
+
     for counter, url in enumerate(p.video_urls, start=1):
         try:
-            if counter == 1: print('\nDownloading audio from:')  # prints just before the first download
             if url in urls_dict:
                 urls_dict[url][1] = 1  # updates counter to show the song is still on the playlist 
                 continue  # ignores videos that are already on the playlist
 
+            # Ugly solution but I wanted to print this only when there was at least one video
+            if len(urls_dict) < p.length and first:
+                print('\nDownloading audio from:')
+                first = False
             yt = YouTube(url)
             print(f'({counter}/{p.length}) {yt.title}')
             

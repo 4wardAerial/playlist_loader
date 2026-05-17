@@ -8,10 +8,9 @@ from shutil import copyfile, rmtree
 from manager import download_playlist, sync_playlist
 
 TEMP_PATH = '/home/aerial/Coding/Python/playlist_loader/temp'  # Path to temp folder 
-# DEVICE_PATH = '/run/user/1000/gvfs/mtp:host=motorola_moto_g56_5G_ZF5257PRVK/SD_MUSIC/Music'  # Path to Device
-DEVICE_PATH = '/media/aerial/MUSIC'
+DEVICE_PATH = '/run/user/1000/gvfs/mtp:host=motorola_moto_g56_5G_ZF5257PRVK/SD_MUSIC/Music'  # Path to Device
+# DEVICE_PATH = '/media/aerial/MUSIC'
 PLAYLISTS_URLS : list[str] = [
-    'https://www.youtube.com/playlist?list=PLKhMBl2bi_P-Uca3XdYhd_Ka2d3b84Jcd',
     'https://www.youtube.com/playlist?list=PLKhMBl2bi_P8E7ajBeqDttWEvhMW4beFv',  # The Best of Youtube
     'https://www.youtube.com/playlist?list=PLKhMBl2bi_P9RSuR4PkTcIfslMiXBAYhj',  # Oops! All instrumental
     'https://www.youtube.com/playlist?list=PLKhMBl2bi_P_OhqOuK7JSN_uN0U_O8Rj1',  # Hidden Indie Gems
