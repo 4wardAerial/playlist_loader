@@ -30,6 +30,16 @@ def create_dir():
 
 if __name__ == '__main__':
     print('\nYouTube playlist downloader -------------------------made by 4wardAerial')
+
+    if 'gvfs' in USB_PATH or 'mtp:host' in USB_PATH:
+        IS_MTP = True
+        print("-> [Detectado: CELULAR (MTP)] Usando modo de transferência temporária.")
+        quit()
+    else:
+        IS_MTP = False
+        print("-> [Detectado: ARMAZENAMENTO DIRETO (USB/PenDrive)] Salvando arquivos diretamente.")
+        quit()
+
     print('\n[0] Just download   [1] Download and sync')
     mode : int = int(input('> '))
 
@@ -84,4 +94,4 @@ if __name__ == '__main__':
     except KeyboardInterrupt as e:
         print('\nProgram forcefully ended.')
     except FileNotFoundError as e:
-        print(f'\[ERROR] nUSB not found. Error: {e}\n')
+        print(f'\n[ERROR] USB not found. Error: {e}\n')
