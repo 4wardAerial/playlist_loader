@@ -92,10 +92,10 @@ if __name__ == '__main__':
             download_playlist(p, 
                               urls_dict, 
                               logs_dict, 
-                              device_urls_txt, 
+                              local_urls_txt, 
                               local_logs_txt, 
-                              DEVICE_OUTPUT_PATH,
                               LOCAL_OUTPUT_PATH,
+                              DEVICE_OUTPUT_PATH,
                               IS_MOBILE)
 
             with open(local_logs_txt, 'r', encoding='utf-8') as logtxt:
@@ -107,7 +107,7 @@ if __name__ == '__main__':
             if mode == 1:
                 deleted : int = sync_playlist(urls_dict, 
                                               logs_dict, 
-                                              device_urls_txt, 
+                                              local_urls_txt, 
                                               local_logs_txt, 
                                               DEVICE_OUTPUT_PATH)
                 

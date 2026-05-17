@@ -4,6 +4,7 @@ import re
 from pathlib import Path
 from pytubefix import Playlist, YouTube
 from pytubefix.exceptions import VideoUnavailable, AgeRestrictedError, BotDetection
+from shutil import copy2
 
 from errors import FFMPEGError
 
@@ -30,28 +31,29 @@ def m4a_to_mp3(m4a_path : str, mp3_path : str):
         raise FFMPEGError()
     
 
-def download_playlist(p : Playlist, urls_dict : dict, logs_dict : dict, urls_txt : Path, logs_txt : Path, OUTPUT_PATH : Path):
-    counter : int = 0
-
-    for url in p.video_urls:
+def download_playlist(p : Playlist, urls_dict : dict, logs_dict : dict, urls_txt : Path, logs_txt : Path, LOCAL_OUTPUT_PATH : Path, DEVICE_OUTPUT_PATH : Path, IS_MOBILE : bool):
+    for counter, url in enumerate(p.video_urls, start=1):
         try:
-            yt = YouTube(url)
-
-            if url not in urls_dict:  # ignores videos that are already on the playlist
-                print(f'({counter}/{p.length}) Downloading audio from: {yt.title}')
-                
-                ys = yt.streams.filter(only_audio=True, file_extension='mp4').first()
-
-                title = re.sub(r'[\W_]+', '_', yt.title).strip('_')
-                m4a_title = f'{title}.m4a'
-                mp3_title = f'{title}.mp3'
-                ys.download(output_path=OUTPUT_PATH, filename=m4a_title)
-                m4a_to_mp3(f'{OUTPUT_PATH}/{m4a_title}', f'{OUTPUT_PATH}/{mp3_title}')
-
-                with open(urls_txt, 'a', encoding="utf-8") as urltxt:
-                    urltxt.write(f'{url},{title}\n')  # updates file
-            else:
+            if url in urls_dict:
                 urls_dict[url][1] = 1  # updates counter to show the song is still on the playlist 
+                continue  # ignores videos that are already on the playlist
+
+            yt = YouTube(url)
+            print(f'({counter}/{p.length}) Downloading audio from: {yt.title}')
+            
+            ys = yt.streams.filter(only_audio=True, file_extension='mp4').first()
+
+            title = re.sub(r'[\W_]+', '_', yt.title).strip('_')
+            m4a_title = f'{title}.m4a'
+            mp3_title = f'{title}.mp3'
+            ys.download(output_path=LOCAL_OUTPUT_PATH, filename=m4a_title)
+            m4a_to_mp3(f'{LOCAL_OUTPUT_PATH}/{m4a_title}', f'{LOCAL_OUTPUT_PATH}/{mp3_title}')
+
+            if IS_MOBILE:
+                copy2(Path(f'{LOCAL_OUTPUT_PATH}/{mp3_title}'), Path(f'{DEVICE_OUTPUT_PATH}/{mp3_title}'))
+
+            with open(urls_txt, 'a', encoding="utf-8") as urltxt:
+                urltxt.write(f'{url},{title}\n')  # updates file
             
         except FFMPEGError:
             print(f'Video "{url}" caused an ffmpeg error, skipping.')
@@ -69,10 +71,8 @@ def download_playlist(p : Playlist, urls_dict : dict, logs_dict : dict, urls_txt
             print(f'Video "{url}" caused unkown exception "{e}", skipping.')
             add_to_log('unknown', url, logs_dict, logs_txt)
 
-        counter += 1
 
-
-def sync_playlist(urls_dict : dict, logs_dict : dict, urls_txt : Path, logs_txt : Path, OUTPUT_PATH : Path) -> int:
+def sync_playlist(urls_dict : dict, logs_dict : dict, urls_txt : Path, logs_txt : Path, DEVICE_OUTPUT_PATH : Path) -> int:
     # Creates list of videos that were deleted on youtube, but not in the USB
     to_remove = [url for url, data in urls_dict.items() if data[1] == 0]
     if not to_remove:
@@ -89,7 +89,7 @@ def sync_playlist(urls_dict : dict, logs_dict : dict, urls_txt : Path, logs_txt 
         title = urls_dict[url_key][0].rstrip()
         print(title)
         mp3_title = f'{title}.mp3'
-        mp3_path = f'{OUTPUT_PATH}/{mp3_title}'
+        mp3_path = f'{DEVICE_OUTPUT_PATH}/{mp3_title}'
 
         if os.path.exists(mp3_path):
             try:
