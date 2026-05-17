@@ -18,7 +18,7 @@ def add_to_log(reason : str, log : str, logs_dict : dict, logs_txt : Path):
 
 def m4a_to_mp3(m4a_path : str, mp3_path : str):
     # Adjusted command to ensure compatibility
-    command = f'ffmpeg -nostats -i "{m4a_path}" -fflags +genpts -vn -ar 44100 -ac 2 -ab 192k -f mp3 -hide_banner -loglevel quiet "{mp3_path}"'
+    command = f'ffmpeg -y -nostats -i "{m4a_path}" -fflags +genpts -vn -ar 44100 -ac 2 -ab 192k -f mp3 -hide_banner -loglevel quiet "{mp3_path}"'
     result = os.system(command)
 
     if os.path.exists(m4a_path):  # deletes the m4a file regardless
@@ -32,9 +32,9 @@ def m4a_to_mp3(m4a_path : str, mp3_path : str):
     
 
 def download_playlist(p : Playlist, urls_dict : dict, logs_dict : dict, urls_txt : Path, logs_txt : Path, LOCAL_OUTPUT_PATH : Path, DEVICE_OUTPUT_PATH : Path, IS_MOBILE : bool):
-    print('\nDownloading audio from:')
     for counter, url in enumerate(p.video_urls, start=1):
         try:
+            if counter == 1: print('\nDownloading audio from:')  # prints just before the first download
             if url in urls_dict:
                 urls_dict[url][1] = 1  # updates counter to show the song is still on the playlist 
                 continue  # ignores videos that are already on the playlist
@@ -83,6 +83,7 @@ def sync_playlist(urls_dict : dict, logs_dict : dict, urls_txt : Path, logs_txt 
     print(f'{len(to_remove)} file(s) will be removed during syncing. Proceed? [Y/n]')
     confirmation = input("> ")
 
+    # Confirmation just to prevent it from deleting everything
     if confirmation != 'Y':
         return 0
 
@@ -105,4 +106,4 @@ def sync_playlist(urls_dict : dict, logs_dict : dict, urls_txt : Path, logs_txt 
     with open(urls_txt, 'w', encoding='utf-8') as urltxt:
         for url, data in urls_dict.items():
             urltxt.write(f'{url},{data[0]}')  # updates file
-    return counter - 1
+    return counter

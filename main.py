@@ -126,8 +126,9 @@ if __name__ == '__main__':
                 copyfile(local_logs_txt, device_logs_txt)
                 print('Text files successfully uploaded to Mobile.\n')
 
-            print(f'Playlist {p.title} fully updated!\n\n')
+            print(f'Playlist {p.title} fully updated!')
             sleep(1)
+            print('\n')
 
         # Clears temp folder at the end
         if IS_MOBILE and Path(TEMP_PATH).exists():
