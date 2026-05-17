@@ -25,13 +25,14 @@ def m4a_to_mp3(m4a_path : str, mp3_path : str):
         try:
             os.remove(m4a_path)
         except Exception as e:
-            print(f"[ERROR] Error while deleting {m4a_path}: {e}")
+            print(f'[ERROR] Error while deleting {m4a_path}: {e}')
 
     if result != 0:
         raise FFMPEGError()
     
 
 def download_playlist(p : Playlist, urls_dict : dict, logs_dict : dict, urls_txt : Path, logs_txt : Path, LOCAL_OUTPUT_PATH : Path, DEVICE_OUTPUT_PATH : Path, IS_MOBILE : bool):
+    print('\nDownloading audio from:')
     for counter, url in enumerate(p.video_urls, start=1):
         try:
             if url in urls_dict:
@@ -39,7 +40,7 @@ def download_playlist(p : Playlist, urls_dict : dict, logs_dict : dict, urls_txt
                 continue  # ignores videos that are already on the playlist
 
             yt = YouTube(url)
-            print(f'({counter}/{p.length}) Downloading audio from: {yt.title}')
+            print(f'({counter}/{p.length}) {yt.title}')
             
             ys = yt.streams.filter(only_audio=True, file_extension='mp4').first()
 
@@ -76,31 +77,32 @@ def sync_playlist(urls_dict : dict, logs_dict : dict, urls_txt : Path, logs_txt 
     # Creates list of videos that were deleted on youtube, but not in the USB
     to_remove = [url for url, data in urls_dict.items() if data[1] == 0]
     if not to_remove:
-        print("\nUSB is already synced.")
+        print('Device is already synced.')
         return 0
 
-    print(f"\nSyncing: {len(to_remove)} files will be removed. Proceed? [Y/n]\n")
+    print(f'{len(to_remove)} file(s) will be removed during syncing. Proceed? [Y/n]')
     confirmation = input("> ")
 
     if confirmation != 'Y':
         return 0
+
+    print('\nDeleting:')
     for counter, url_key in enumerate(to_remove, start=1):
         title = urls_dict[url_key][0].rstrip()
-        print(title)
         mp3_title = f'{title}.mp3'
         mp3_path = f'{DEVICE_OUTPUT_PATH}/{mp3_title}'
 
         if os.path.exists(mp3_path):
             try:
-                print(f'({counter}/{len(to_remove)}) Deleting: {title}')
+                print(f'({counter}/{len(to_remove)}) {title}')
                 os.remove(mp3_path)
                 add_to_log('deletion', title, logs_dict, logs_txt)
             except Exception as e:
-                print(f"Error while deleting {mp3_path}: {e}")
+                print(f'Error while deleting {mp3_path}: {e}')
 
         del urls_dict[url_key]  # removes from the dict
 
-    with open(urls_txt, "w", encoding='utf-8') as urltxt:
+    with open(urls_txt, 'w', encoding='utf-8') as urltxt:
         for url, data in urls_dict.items():
             urltxt.write(f'{url},{data[0]}')  # updates file
     return counter - 1

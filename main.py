@@ -8,8 +8,10 @@ from shutil import copyfile, rmtree
 from manager import download_playlist, sync_playlist
 
 TEMP_PATH = '/home/aerial/Coding/Python/playlist_loader/temp'  # Path to temp folder 
-DEVICE_PATH = '/run/user/1000/gvfs/mtp:host=motorola_moto_g56_5G_ZF5257PRVK/SD_MUSIC/Music'  # Path to Device
+# DEVICE_PATH = '/run/user/1000/gvfs/mtp:host=motorola_moto_g56_5G_ZF5257PRVK/SD_MUSIC/Music'  # Path to Device
+DEVICE_PATH = '/media/aerial/MUSIC'
 PLAYLISTS_URLS : list[str] = [
+    'https://www.youtube.com/playlist?list=PLKhMBl2bi_P-Uca3XdYhd_Ka2d3b84Jcd',
     'https://www.youtube.com/playlist?list=PLKhMBl2bi_P8E7ajBeqDttWEvhMW4beFv',  # The Best of Youtube
     'https://www.youtube.com/playlist?list=PLKhMBl2bi_P9RSuR4PkTcIfslMiXBAYhj',  # Oops! All instrumental
     'https://www.youtube.com/playlist?list=PLKhMBl2bi_P_OhqOuK7JSN_uN0U_O8Rj1',  # Hidden Indie Gems
@@ -30,21 +32,22 @@ def create_dir(output_path : Path):
  
 
 if __name__ == '__main__':
-    print('\nYouTube playlist downloader -------------------------made by 4wardAerial')
+    print('\nYouTube playlist downloader ========================= made by 4wardAerial')
     
     # Checks if device exists, if it is a Mobile (needs temp files) or an USB 
     if not Path(DEVICE_PATH).exists():
-        print("\nNo device was found.")
+        print('\nNo device was found.')
         exit(1)
     if 'gvfs' in DEVICE_PATH or 'mtp:host' in DEVICE_PATH:
         IS_MOBILE : bool = True
-        print("\nSearching for MOBILE device.")
+        print('\nSearching for MOBILE device.')
     else:
         IS_MOBILE : bool = False
-        print("\nSearching for USB device.")
+        print('\nSearching for USB device.')
 
-    print('\n[0] Just download   [1] Download and sync')
+    print('\n[0] Download   [1] Sync')
     mode : int = int(input('> '))
+    print()
 
     try:
         for PLAYLIST_URL in PLAYLISTS_URLS:
@@ -52,8 +55,9 @@ if __name__ == '__main__':
             dir = p.title
             DEVICE_OUTPUT_PATH : str = f'{DEVICE_PATH}/{dir}'
 
-            print("\n------------------------------------------------------------------------")
-            print(f'Downloading playlist: {p.title}\n')
+            print('-----------------------------------------------------------------------+')
+            print(f'Currently on playlist: {p.title}')
+            print('-----------------------------------------------------------------------+')
 
             create_dir(DEVICE_OUTPUT_PATH)  # Creates directory in the device with the playlist's name
             if IS_MOBILE:
@@ -71,8 +75,8 @@ if __name__ == '__main__':
 
             if os.path.exists(device_urls_txt):
                 if IS_MOBILE:
-                    print(f"File '{device_urls_txt}' found on Mobile, copied to local.")
                     copyfile(device_urls_txt, local_urls_txt)
+                    print(f"File '{device_urls_txt}' found on Mobile, copied to local.")
 
                 # Reminder taht local_urls_txt is the same as device_urls_txt if device is an USB
                 with open(local_urls_txt, 'r+', encoding='utf-8') as urltxt:
@@ -81,15 +85,15 @@ if __name__ == '__main__':
                         url, title = line.split(sep=',', maxsplit=1)
                         urls_dict[url] = [title, 0]  # converts the lines to a 'url : (title, counter)' dictionary
             else:
-                print(f"File '{device_urls_txt}' not found, creating one locally.")
                 open(local_urls_txt, 'w').close()
+                print(f"File '{device_urls_txt}' created successfully.")
 
             device_logs_txt = Path(f'{DEVICE_OUTPUT_PATH}/logs.txt')
             local_logs_txt = Path(f'{LOCAL_OUTPUT_PATH}/logs.txt')
             logs_dict : dict = {}
             open(local_logs_txt, 'w', encoding='utf-8').close()
-            print(f"File '{local_logs_txt}' created successfully.\n")
-            
+            print(f"File '{local_logs_txt}' created successfully.")
+
             download_playlist(p, 
                               urls_dict, 
                               logs_dict, 
@@ -101,8 +105,8 @@ if __name__ == '__main__':
 
             with open(local_logs_txt, 'r', encoding='utf-8') as logtxt:
                 lines = logtxt.readlines()
-            print(f'\nDownloaded Playlist {p.title} with {len(lines)}/{p.length} skips.')
-            print("------------------------------------------------------------------------")
+            print(f'\nDownloaded playlist {p.title} with {len(lines)}/{p.length} skips.')
+            print('-----------------------------------~')
             sleep(1)
 
             if mode == 1:
@@ -112,26 +116,28 @@ if __name__ == '__main__':
                                               local_logs_txt, 
                                               DEVICE_OUTPUT_PATH)
                 
-                print(f'\nSynced Playlist {p.title} with {deleted} deletions')
-                print("------------------------------------------------------------------------")
+                print(f'\nSynced Playlist {p.title} with {deleted} deletions.')
+                print('-----------------------------------~')
                 sleep(1)
 
             # Copies files that are on temp folder back to Mobile device
             if IS_MOBILE:
-                print('\nUploading .txt files to Mobile.')
                 copyfile(local_urls_txt, device_urls_txt)
                 copyfile(local_logs_txt, device_logs_txt)
+                print('Text files successfully uploaded to Mobile.\n')
 
             print(f'Playlist {p.title} fully updated!')
-            print("------------------------------------------------------------------------")
             sleep(1)
 
         # Clears temp folder at the end
         if IS_MOBILE and Path(TEMP_PATH).exists():
+            print('-----------------------------------------------------------------------+')
             rmtree(Path(TEMP_PATH))
+            print('Temporary files removed.')
+            sleep(1)
             
-        print('\nAll playlists updated successfully.\n')
+        print('\nAll playlists updated successfully ======================================\n')
     except KeyboardInterrupt as e:
         print('\nProgram forcefully ended.')
-    # except Exception as e:
-    #     print(f'\n[ERROR] {e}\n')
+    except Exception as e:
+        print(f'\n[ERROR] {e}\n')
