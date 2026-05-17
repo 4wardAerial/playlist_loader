@@ -7,10 +7,12 @@ from pathlib import Path
 from pytubefix import Playlist, YouTube
 from pytubefix.exceptions import VideoUnavailable, AgeRestrictedError, BotDetection
 
-USB_PATH = '/media/lucas-henrique/MUSIC'  # Path to USB
+USB_PATH = '/media/aerial/SD_MUSIC'  # Path to USB
 PLAYLISTS_URLS : list[str] = [
     'https://www.youtube.com/playlist?list=PLKhMBl2bi_P8E7ajBeqDttWEvhMW4beFv',  # The Best of Youtube
-    'https://www.youtube.com/playlist?list=PLKhMBl2bi_P-DFD5aufaItfrnpXCgqDBS',  # Anything Goes
+    'https://www.youtube.com/playlist?list=PLKhMBl2bi_P9RSuR4PkTcIfslMiXBAYhj',  # Oops! All instrumental
+    'https://www.youtube.com/playlist?list=PLKhMBl2bi_P_OhqOuK7JSN_uN0U_O8Rj1',  # Hidden Indie Gems
+    'https://www.youtube.com/playlist?list=PLKhMBl2bi_P-DFD5aufaItfrnpXCgqDBS',  # Songs to Hear With Your Ears
 ]
 
 
@@ -102,7 +104,11 @@ def sync_playlist(urls_dict : dict, logs_dict : dict) -> int:
         return 0
 
     counter : int = 1  # so it displays 1/xx ... xx/xx instead of one less
-    print(f"\nSyncing: {len(to_remove)} files will be removed.\n")
+    print(f"\nSyncing: {len(to_remove)} files will be removed. Proceed? [Y/n]\n")
+    confirmation = input("> ")
+
+    if confirmation != 'Y':
+        return 0
     for url_key in to_remove:
         title = urls_dict[url_key][0].rstrip()
         print(title)
