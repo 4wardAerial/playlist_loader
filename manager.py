@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 from pytubefix import Playlist, YouTube
 from pytubefix.exceptions import VideoUnavailable, AgeRestrictedError, BotDetection
-from shutil import copy2
+from shutil import copyfile
 
 from errors import FFMPEGError
 
@@ -50,7 +50,7 @@ def download_playlist(p : Playlist, urls_dict : dict, logs_dict : dict, urls_txt
             m4a_to_mp3(f'{LOCAL_OUTPUT_PATH}/{m4a_title}', f'{LOCAL_OUTPUT_PATH}/{mp3_title}')
 
             if IS_MOBILE:
-                copy2(Path(f'{LOCAL_OUTPUT_PATH}/{mp3_title}'), Path(f'{DEVICE_OUTPUT_PATH}/{mp3_title}'))
+                copyfile(Path(f'{LOCAL_OUTPUT_PATH}/{mp3_title}'), Path(f'{DEVICE_OUTPUT_PATH}/{mp3_title}'))
 
             with open(urls_txt, 'a', encoding="utf-8") as urltxt:
                 urltxt.write(f'{url},{title}\n')  # updates file

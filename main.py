@@ -3,7 +3,7 @@ import os
 from time import sleep
 from pathlib import Path
 from pytubefix import Playlist
-from shutil import copy2, rmtree
+from shutil import copyfile, rmtree
 
 from manager import download_playlist, sync_playlist
 
@@ -57,6 +57,7 @@ if __name__ == '__main__':
 
             create_dir(DEVICE_OUTPUT_PATH)  # Creates directory in the device with the playlist's name
             if IS_MOBILE:
+                create_dir(TEMP_PATH)
                 LOCAL_OUTPUT_PATH : str = f'{TEMP_PATH}/{dir}'
                 create_dir(LOCAL_OUTPUT_PATH)  # Creates directory locally with the playlist's name
             else:
@@ -71,7 +72,7 @@ if __name__ == '__main__':
             if os.path.exists(device_urls_txt):
                 if IS_MOBILE:
                     print(f"File '{device_urls_txt}' found on Mobile, copied to local.")
-                    copy2(device_urls_txt, local_urls_txt)
+                    copyfile(device_urls_txt, local_urls_txt)
 
                 # Reminder taht local_urls_txt is the same as device_urls_txt if device is an USB
                 with open(local_urls_txt, 'r+', encoding='utf-8') as urltxt:
@@ -118,8 +119,8 @@ if __name__ == '__main__':
             # Copies files that are on temp folder back to Mobile device
             if IS_MOBILE:
                 print('\nUploading .txt files to Mobile.')
-                copy2(local_urls_txt, device_urls_txt)
-                copy2(local_logs_txt, device_logs_txt)
+                copyfile(local_urls_txt, device_urls_txt)
+                copyfile(local_logs_txt, device_logs_txt)
 
             print(f'Playlist {p.title} fully updated!')
             print("------------------------------------------------------------------------")
