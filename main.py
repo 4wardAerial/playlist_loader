@@ -3,7 +3,7 @@ import os
 from time import sleep
 from pathlib import Path
 from pytubefix import Playlist
-from shutil import copy2
+from shutil import copy2, rmtree
 
 from manager import download_playlist, sync_playlist
 
@@ -83,28 +83,51 @@ if __name__ == '__main__':
                 print(f"File '{device_urls_txt}' not found, creating one locally.")
                 open(local_urls_txt, 'w').close()
 
-            exit(1)
-            logs_txt = Path(f'{DEVICE_OUTPUT_PATH}/logs.txt')
+            device_logs_txt = Path(f'{DEVICE_OUTPUT_PATH}/logs.txt')
+            local_logs_txt = Path(f'{LOCAL_OUTPUT_PATH}/logs.txt')
             logs_dict : dict = {}
-            open(logs_txt, 'w', encoding='utf-8').close()
-            print(f"File '{logs_txt}' created successfully.\n")
+            open(local_logs_txt, 'w', encoding='utf-8').close()
+            print(f"File '{local_logs_txt}' created successfully.\n")
             
-            download_playlist(p, urls_dict, logs_dict, device_urls_txt, logs_txt, DEVICE_OUTPUT_PATH)
-            with open(logs_txt, 'r', encoding='utf-8') as logtxt:
+            download_playlist(p, 
+                              urls_dict, 
+                              logs_dict, 
+                              device_urls_txt, 
+                              local_logs_txt, 
+                              DEVICE_OUTPUT_PATH,
+                              LOCAL_OUTPUT_PATH,
+                              IS_MOBILE)
+
+            with open(local_logs_txt, 'r', encoding='utf-8') as logtxt:
                 lines = logtxt.readlines()
             print(f'\nDownloaded Playlist {p.title} with {len(lines)}/{p.length} skips.')
             print("------------------------------------------------------------------------")
             sleep(1)
 
             if mode == 1:
-                deleted : int = sync_playlist(urls_dict, logs_dict, device_urls_txt, logs_txt, DEVICE_OUTPUT_PATH)
+                deleted : int = sync_playlist(urls_dict, 
+                                              logs_dict, 
+                                              device_urls_txt, 
+                                              local_logs_txt, 
+                                              DEVICE_OUTPUT_PATH)
+                
                 print(f'\nSynced Playlist {p.title} with {deleted} deletions')
                 print("------------------------------------------------------------------------")
                 sleep(1)
 
+            # Copies files that are on temp folder back to Mobile device
+            if IS_MOBILE:
+                print('\nUploading .txt files to Mobile.')
+                copy2(local_urls_txt, device_urls_txt)
+                copy2(local_logs_txt, device_logs_txt)
+
             print(f'Playlist {p.title} fully updated!')
             print("------------------------------------------------------------------------")
             sleep(1)
+
+        # Clears temp folder at the end
+        if IS_MOBILE and Path(TEMP_PATH).exists():
+            rmtree(Path(TEMP_PATH))
             
         print('\nAll playlists updated successfully.\n')
     except KeyboardInterrupt as e:
