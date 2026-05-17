@@ -6,6 +6,7 @@ from pytubefix import Playlist
 
 from manager import download_playlist, sync_playlist
 
+TEMP_PATH = '/temp'  # Path to temp folder 
 USB_PATH = '/run/user/1000/gvfs/mtp:host=motorola_moto_g56_5G_ZF5257PRVK/SD_MUSIC/Music'  # Path to USB
 PLAYLISTS_URLS : list[str] = [
     'https://www.youtube.com/playlist?list=PLKhMBl2bi_P8E7ajBeqDttWEvhMW4beFv',  # The Best of Youtube
@@ -22,7 +23,7 @@ def create_dir():
     except FileExistsError:
         print(f"Directory '{OUTPUT_PATH}' already exists.")
     except PermissionError:
-        print(f"Permission denied: Unable to create '{OUTPUT_PATH}'")
+        print(f"[ERROR] Permission denied: Unable to create '{OUTPUT_PATH}'")
     except FileNotFoundError:
         raise FileNotFoundError
  
@@ -83,4 +84,4 @@ if __name__ == '__main__':
     except KeyboardInterrupt as e:
         print('\nProgram forcefully ended.')
     except FileNotFoundError as e:
-        print(f'\nUSB not found. Error: {e}\n')
+        print(f'\[ERROR] nUSB not found. Error: {e}\n')

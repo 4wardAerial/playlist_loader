@@ -24,7 +24,7 @@ def m4a_to_mp3(m4a_path : str, mp3_path : str):
         try:
             os.remove(m4a_path)
         except Exception as e:
-            print(f"Error while deleting {m4a_path}: {e}")
+            print(f"[ERROR] Error while deleting {m4a_path}: {e}")
 
     if result != 0:
         raise FFMPEGError()
