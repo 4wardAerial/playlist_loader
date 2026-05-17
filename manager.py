@@ -57,6 +57,7 @@ def download_playlist(p : Playlist, urls_dict : dict, logs_dict : dict, urls_txt
 
             if IS_MOBILE:
                 copyfile(Path(f'{LOCAL_OUTPUT_PATH}/{mp3_title}'), Path(f'{DEVICE_OUTPUT_PATH}/{mp3_title}'))
+                os.remove(Path(f'{LOCAL_OUTPUT_PATH}/{mp3_title}'))  # removes song from temp after copying it
 
             with open(urls_txt, 'a', encoding="utf-8") as urltxt:
                 urltxt.write(f'{url},{title}\n')  # updates file
