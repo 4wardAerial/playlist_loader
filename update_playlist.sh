@@ -1,8 +1,11 @@
 #!/bin/bash
-PATH=/home/aerial/Coding/Python/playlist_loader
+DIR=/home/aerial/Coding/Python/playlist_loader
 VENV=/home/aerial/Coding/Python/playlist_loader/.venv/bin/activate
 CODE=/home/aerial/Coding/Python/playlist_loader/main.py
 
-cd $PATH
+cd $DIR
 source $VENV
 python3 $CODE
+
+echo ""
+read -p "Press [Enter] to close terminal."
