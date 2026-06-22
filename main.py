@@ -7,9 +7,12 @@ from shutil import copyfile, rmtree
 
 from manager import download_playlist, sync_playlist
 
-TEMP_PATH = '/home/aerial/Coding/Python/playlist_loader/temp'  # Path to temp folder 
-DEVICE_PATH = '/run/user/1000/gvfs/mtp:host=motorola_moto_g56_5G_ZF5257PRVK/SD_MUSIC/Music'  # Path to Device
-# DEVICE_PATH = '/media/aerial/MUSIC'
+TEMP_PATH : str = '/home/aerial/Coding/Python/playlist_loader/temp'  # Path to temp folder 
+DEVICE_PATHS :list[str] = [
+    '/run/user/1000/gvfs/mtp:host=motorola_moto_g56_5G_ZF5257PRVK/SD_MUSIC/Music',  # Path to Device
+    '/media/aerial/SD_MUSIC',
+]
+DEVICE_PATH : str = ""
 PLAYLISTS_URLS : list[str] = [
     'https://www.youtube.com/playlist?list=PLKhMBl2bi_P8E7ajBeqDttWEvhMW4beFv',  # The Best of Youtube
     'https://www.youtube.com/playlist?list=PLKhMBl2bi_P9RSuR4PkTcIfslMiXBAYhj',  # Oops! All instrumental
@@ -34,15 +37,23 @@ if __name__ == '__main__':
     print('\nYouTube playlist downloader ========================= made by 4wardAerial')
     
     # Checks if device exists, if it is a Mobile (needs temp files) or an USB 
-    if not Path(DEVICE_PATH).exists():
-        print('\nNo device was found.')
+    for device_path in DEVICE_PATHS:
+        if not Path(device_path).exists():
+            print('\nSearching for device...')
+            continue
+        if 'gvfs' in device_path or 'mtp:host' in device_path:
+            IS_MOBILE : bool = True
+            print('\nSearching for MOBILE device.')
+            DEVICE_PATH = device_path
+            break
+        else:
+            IS_MOBILE : bool = False
+            print('\nSearching for USB device.')
+            DEVICE_PATH = device_path
+            break
+    if DEVICE_PATH == "":
+        print("No device was found. Exiting program.")
         exit(1)
-    if 'gvfs' in DEVICE_PATH or 'mtp:host' in DEVICE_PATH:
-        IS_MOBILE : bool = True
-        print('\nSearching for MOBILE device.')
-    else:
-        IS_MOBILE : bool = False
-        print('\nSearching for USB device.')
 
     print('\n[0] Download   [1] Sync')
     mode : int = int(input('> '))
