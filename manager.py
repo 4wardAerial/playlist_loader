@@ -44,7 +44,7 @@ def download_playlist(p : Playlist, urls_dict : dict, logs_dict : dict, urls_txt
             if len(urls_dict) < p.length and first:
                 print('\nDownloading audio from:')
                 first = False
-            yt = YouTube(url)
+            yt = YouTube(url, client='WEB_MUSIC')
             print(f'({counter}/{p.length}) {yt.title}')
             
             ys = yt.streams.filter(only_audio=True, file_extension='mp4').first()

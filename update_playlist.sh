@@ -1,11 +1,11 @@
 #!/bin/bash
-DIR=/home/aerial/Coding/Python/playlist_loader
-VENV=/home/aerial/Coding/Python/playlist_loader/.venv/bin/activate
-CODE=/home/aerial/Coding/Python/playlist_loader/main.py
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+VENV="$SCRIPT_DIR/.venv/bin/activate"
+CODE="$SCRIPT_DIR/main.py"
 
-cd $DIR
-source $VENV
-python3 $CODE
+cd "$SCRIPT_DIR" || exit 1
+source "$VENV"
+python3 "$CODE"
 
 echo ""
 read -p "Press [Enter] to close terminal."

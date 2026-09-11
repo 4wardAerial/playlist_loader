@@ -7,16 +7,19 @@ from shutil import copyfile, rmtree
 
 from manager import download_playlist, sync_playlist
 
-TEMP_PATH : str = '/home/aerial/Coding/Python/playlist_loader/temp'  # Path to temp folder 
+TEMP_PATH : str = '/home/lucas/Coding/Python/playlist_loader/temp'  # Path to temp folder 
 DEVICE_PATHS :list[str] = [
-    '/run/user/1000/gvfs/mtp:host=motorola_moto_g56_5G_ZF5257PRVK/SD_MUSIC/Music',  # Path to Device
+    '/run/user/1000/gvfs/mtp:host=motorola_moto_g56_5G_ZF5257PRVK/SD_MUSIC/Music',  # Path to Plugged Device
+    '/run/user/1000/28347f321a0144b4bc984b0f57b92fbc/storage/B431-FAB8/Music',     # Path to KDEConnected Device
     '/media/aerial/SD_MUSIC',
 ]
 DEVICE_PATH : str = ""
 PLAYLISTS_URLS : list[str] = [
+    'https://www.youtube.com/playlist?list=PLKhMBl2bi_P_OhqOuK7JSN_uN0U_O8Rj1',  # Hidden Indie Gems
+    'https://www.youtube.com/playlist?list=PLJas2l8TI9F0',                       # The Seven Colored Songs       
+    'https://www.youtube.com/playlist?list=PLHucT6YXGGdw',                       # Versão Brasileira
     'https://www.youtube.com/playlist?list=PLKhMBl2bi_P8E7ajBeqDttWEvhMW4beFv',  # The Best of Youtube
     'https://www.youtube.com/playlist?list=PLKhMBl2bi_P9RSuR4PkTcIfslMiXBAYhj',  # Oops! All instrumental
-    'https://www.youtube.com/playlist?list=PLKhMBl2bi_P_OhqOuK7JSN_uN0U_O8Rj1',  # Hidden Indie Gems
     'https://www.youtube.com/playlist?list=PLKhMBl2bi_P-DFD5aufaItfrnpXCgqDBS',  # Songs to Hear With Your Ears
 ]
 
@@ -43,7 +46,12 @@ if __name__ == '__main__':
             continue
         if 'gvfs' in device_path or 'mtp:host' in device_path:
             IS_MOBILE : bool = True
-            print('\nSearching for MOBILE device.')
+            print('\nSearching for WIRED MOBILE device.')
+            DEVICE_PATH = device_path
+            break
+        elif 'storage' in device_path:
+            IS_MOBILE : bool = True
+            print('\nSearching for WIRELESS MOBILE device.')
             DEVICE_PATH = device_path
             break
         else:
@@ -147,7 +155,7 @@ if __name__ == '__main__':
             print('Temporary files removed.')
             sleep(1)
             
-        print('\nAll playlists updated successfully ======================================\n')
+        print('\nAll playlists updated successfully ======================================')
     except KeyboardInterrupt as e:
         print('\nProgram forcefully ended.')
     except Exception as e:
