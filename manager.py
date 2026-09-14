@@ -1,12 +1,51 @@
 import os
 import re
-
 from pathlib import Path
 from pytubefix import Playlist, YouTube
 from pytubefix.exceptions import VideoUnavailable, AgeRestrictedError, BotDetection
 from shutil import copyfile
+import subprocess
+from mutagen.id3 import ID3, APIC, ID3NoHeaderError
+from PIL import Image
+from io import BytesIO
 
 from errors import FFMPEGError
+
+COVERS_PATH : str = '/home/lucas/Coding/Python/playlist_loader/covers'  # Path to covers folder 
+
+
+def resize_image_bytes(image_path: str, max_size=(600, 600)) -> bytes:
+    img = Image.open(image_path).convert("RGB")
+    img.thumbnail(max_size)
+    buf = BytesIO()
+    img.save(buf, format="JPEG", quality=85)
+    return buf.getvalue()
+
+
+def set_album_cover(mp3_path: str, image_path: str):
+    if not os.path.exists(image_path):
+        return
+    
+    try:
+        audio = ID3(mp3_path)
+    except ID3NoHeaderError:
+        audio = ID3()
+
+    img_data = resize_image_bytes(image_path)
+    mime = "image/jpeg"
+
+    # Remove old covers if they exist (they shouldn't)
+    audio.delall("APIC")
+    audio.add(
+        APIC(
+            encoding=3,     # UTF-8
+            mime=mime,
+            type=3,         # 3 = "Front Cover"
+            desc="Cover",
+            data=img_data
+        )
+    )
+    audio.save(mp3_path, v2_version=3)
 
    
 def add_to_log(reason : str, log : str, logs_dict : dict, logs_txt : Path):
@@ -15,21 +54,25 @@ def add_to_log(reason : str, log : str, logs_dict : dict, logs_txt : Path):
             logtxt.write(f'{log},{reason}\n')  # updates file
 
 
-
 def m4a_to_mp3(m4a_path : str, mp3_path : str):
     # Adjusted command to ensure compatibility
-    command = f'ffmpeg -y -nostats -i "{m4a_path}" -fflags +genpts -vn -ar 44100 -ac 2 -ab 192k -f mp3 -hide_banner -loglevel quiet "{mp3_path}"'
-    result = os.system(command)
+    command = [
+        "ffmpeg", "-y", "-nostats", "-i", m4a_path, 
+        "-fflags", "+genpts", "-vn", "-ar", "44100", 
+        "-ac", "2", "-ab", "192k", "-f", "mp3", 
+        "-hide_banner", "-loglevel", "quiet", mp3_path
+    ]
+    try:
+        subprocess.run(command, check=True)
+    except subprocess.CalledProcessError:
+        raise FFMPEGError() 
+    finally:
+        if os.path.exists(m4a_path):  # deletes the m4a file regardless
+            try:
+                os.remove(m4a_path)
+            except Exception as e:
+                print(f'[ERROR] Error while deleting {m4a_path}: {e}')
 
-    if os.path.exists(m4a_path):  # deletes the m4a file regardless
-        try:
-            os.remove(m4a_path)
-        except Exception as e:
-            print(f'[ERROR] Error while deleting {m4a_path}: {e}')
-
-    if result != 0:
-        raise FFMPEGError()
-    
 
 def download_playlist(p : Playlist, urls_dict : dict, logs_dict : dict, urls_txt : Path, logs_txt : Path, LOCAL_OUTPUT_PATH : Path, DEVICE_OUTPUT_PATH : Path, IS_MOBILE : bool):
     first : bool = True
@@ -52,8 +95,10 @@ def download_playlist(p : Playlist, urls_dict : dict, logs_dict : dict, urls_txt
             title = re.sub(r'[\W_]+', '_', yt.title).strip('_')
             m4a_title = f'{title}.m4a'
             mp3_title = f'{title}.mp3'
+            cover_title = f'{p.title}.png'
             ys.download(output_path=LOCAL_OUTPUT_PATH, filename=m4a_title)
             m4a_to_mp3(f'{LOCAL_OUTPUT_PATH}/{m4a_title}', f'{LOCAL_OUTPUT_PATH}/{mp3_title}')
+            set_album_cover(f'{LOCAL_OUTPUT_PATH}/{mp3_title}', f'{COVERS_PATH}/{cover_title}')
 
             if IS_MOBILE:
                 copyfile(Path(f'{LOCAL_OUTPUT_PATH}/{mp3_title}'), Path(f'{DEVICE_OUTPUT_PATH}/{mp3_title}'))

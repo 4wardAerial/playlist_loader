@@ -1,5 +1,4 @@
 import os
-
 from time import sleep
 from pathlib import Path
 from pytubefix import Playlist
@@ -9,18 +8,18 @@ from manager import download_playlist, sync_playlist
 
 TEMP_PATH : str = '/home/lucas/Coding/Python/playlist_loader/temp'  # Path to temp folder 
 DEVICE_PATHS :list[str] = [
-    '/run/user/1000/gvfs/mtp:host=motorola_moto_g56_5G_ZF5257PRVK/SD_MUSIC/Music',  # Path to Plugged Device
-    '/run/user/1000/28347f321a0144b4bc984b0f57b92fbc/storage/B431-FAB8/Music',     # Path to KDEConnected Device
-    '/media/aerial/SD_MUSIC',
+    '/run/user/1000/28347f321a0144b4bc984b0f57b92fbc/storage/B431-FAB8/Music',                      # Path to KDEConnected Device
+    '/media/aerial/SD_MUSIC',                                                                       # Path do USB Device
 ]
 DEVICE_PATH : str = ""
 PLAYLISTS_URLS : list[str] = [
-    'https://www.youtube.com/playlist?list=PLKhMBl2bi_P_OhqOuK7JSN_uN0U_O8Rj1',  # Hidden Indie Gems
-    'https://www.youtube.com/playlist?list=PLJas2l8TI9F0',                       # The Seven Colored Songs       
-    'https://www.youtube.com/playlist?list=PLHucT6YXGGdw',                       # Versão Brasileira
-    'https://www.youtube.com/playlist?list=PLKhMBl2bi_P8E7ajBeqDttWEvhMW4beFv',  # The Best of Youtube
-    'https://www.youtube.com/playlist?list=PLKhMBl2bi_P9RSuR4PkTcIfslMiXBAYhj',  # Oops! All instrumental
-    'https://www.youtube.com/playlist?list=PLKhMBl2bi_P-DFD5aufaItfrnpXCgqDBS',  # Songs to Hear With Your Ears
+    'https://www.youtube.com/playlist?list=PLKhMBl2bi_P_OhqOuK7JSN_uN0U_O8Rj1',     # Hidden Indie Gems
+    'https://www.youtube.com/playlist?list=PLUkQSHWhs700',                          # Videogame Inc.
+    'https://www.youtube.com/playlist?list=PLJas2l8TI9F0',                          # The Seven Colored Songs       
+    'https://www.youtube.com/playlist?list=PLHucT6YXGGdw',                          # Versão Brasileira
+    'https://www.youtube.com/playlist?list=PLKhMBl2bi_P8E7ajBeqDttWEvhMW4beFv',     # The Best of Youtube
+    'https://www.youtube.com/playlist?list=PLKhMBl2bi_P9RSuR4PkTcIfslMiXBAYhj',     # Oops! All orchestral
+    'https://www.youtube.com/playlist?list=PLKhMBl2bi_P-DFD5aufaItfrnpXCgqDBS',     # Songs to Hear With Your Ears
 ]
 
 
